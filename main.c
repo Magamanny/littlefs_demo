@@ -48,7 +48,7 @@ int main(void)
 		.read_size = 256,
 		.prog_size = 256,
 		.block_size = 256, // size of a single block, flash memory is arranged in sectorse(eg. 25cms04 ic)
-		.block_count = 2048, // total size of 25CSM04 are 524,288 bytes
+		.block_count = 40, // 10kb
 		.block_cycles = 100, // not less then 100
 		.cache_size = 256,
 		.lookahead_size = 128,
@@ -72,20 +72,40 @@ int main(void)
 			printf("Fail to mount, error=%d\r\n",err3);
 		}
 	}
-    //memDump();
     // run a simple test
     // int write test
+    printf("Test 1: Int file.\r\n");
     for(int i=0;i<10;i++)
     {
         uint32_t test = 0;
+        // intTest_file
         my_file_open(&lfs, &file, "intTest_file", LFS_O_RDWR | LFS_O_CREAT);
-        lfs_file_read(&lfs, &file, &test, sizeof(test));
+        lfs_file_read(&lfs, &file, &test, sizeof(test)); // /sizeof(test) -> 4
         printf("test_count:%d\r\n",test);
         test += 1;
+        // return file pointer to zero, as lfs_file_read moves it from zero
         lfs_file_rewind(&lfs, &file);
         lfs_file_write(&lfs, &file, &test, sizeof(test));
         // remember the storage is not updated until the file is closed successfully
         lfs_file_close(&lfs, &file);
+    }
+    // store a string
+    // demostrate chunck writing and reading, as embbeded devices dont have much ram
+    printf("Test 2: Text file.\r\n");
+    for(int i=0;i<1;i++)
+    {
+        char text_wr[128];
+        char text_rd[128];
+        // textTest_file
+        strcpy(text_wr,"The Hobbit, or There and Back Again");
+        my_file_open(&lfs, &file, "textTest_file", LFS_O_RDWR | LFS_O_CREAT);
+        lfs_file_write(&lfs, &file, text_wr, strlen(text_wr));
+        lfs_file_close(&lfs, &file); // important
+        // open and read the file
+        my_file_open(&lfs, &file, "textTest_file", LFS_O_RDWR | LFS_O_CREAT);
+        int32_t len = lfs_file_size(&lfs, &file); // get the total file size
+        lfs_file_read(&lfs, &file, &text_rd, len);
+        printf("text file=%s \r\n",text_rd);
     }
     return 0;
 }
@@ -115,6 +135,7 @@ void readData(uint32_t addr, uint8_t *buffer, uint32_t size)
 }
 void writeData(uint32_t addr, uint8_t *buffer, uint32_t size)
 {
+    //printf("addr=%d, size=%d \r\n", addr, size);
     if(size > 256)
     {
         printf("! block size exceeded");

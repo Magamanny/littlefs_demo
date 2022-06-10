@@ -14,5 +14,5 @@ build:
 	gcc -c littlefs-2.5.0/lfs_util.c -o lfs_util.o -D LFS_NO_MALLOC
 	gcc -o app main.o lfs.o lfs_util.o
 	rm *.o
-run:
+run: build
 	./app
