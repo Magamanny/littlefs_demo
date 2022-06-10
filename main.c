@@ -117,9 +117,9 @@ int main(void)
         "The Lion, the Witch and the Wardrobe\r\n",
         "Alice's Adventures in Wonderland\r\n",
         "Howl's Moving Castle\r\n",
-        "Coraline\r\n",
+        "The Eye of the World\r\n",
         "City of Ghosts\r\n"};
-    for(int i=0;i<100;i++)
+    for(int i=0;i<200;i++)
     {
         char text_wr[128+10];
         // textTest_file
@@ -133,7 +133,7 @@ int main(void)
     my_file_open(&lfs, &file, "textTest_file2", LFS_O_RDWR | LFS_O_CREAT);
     // read the file in chunks of 128, as the file will be vary big to read at once
     printf("----data in file----");
-    for(int i=0;i<100;i++)
+    for(int i=0;i<20;i++)
     {
         int r=0;
         char text_rd[128+10]={0};
@@ -145,11 +145,16 @@ int main(void)
         }
         else
         {
-            printf("error, or file end");
+            printf("error, or file end\r\n");
             break;
         }
     }
+    // get size used
     lfs_file_close(&lfs, &file);
+    uint32_t fs_size = lfs_fs_size(&lfs);
+    printf("total space = %d \r\n",10*1024);
+    printf("spaced used = %d \r\n",256*fs_size); // the fs_size is blocked in used
+    printf("spaced used in %% = %.2f \r\n", 100*((256.0*fs_size) / (10*1024)));
     return 0;
 }
 // simple memory modeled using ram
@@ -157,7 +162,7 @@ void memDump()
 {
     for(int i=0;i<10*1024;i++)
     {
-        printf("%2d", eeprom[i]);
+        printf("%c", eeprom[i]);
         if(i%32==0)
         {
             printf("\r\n");
