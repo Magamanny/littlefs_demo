@@ -105,8 +105,51 @@ int main(void)
         my_file_open(&lfs, &file, "textTest_file", LFS_O_RDWR | LFS_O_CREAT);
         int32_t len = lfs_file_size(&lfs, &file); // get the total file size
         lfs_file_read(&lfs, &file, &text_rd, len);
+        lfs_file_close(&lfs, &file); // important
         printf("text file=%s \r\n",text_rd);
     }
+    // fill the file system
+    printf("Test 3: Text file.\r\n");
+    char books[][128] =
+    {
+        "The Lord of the Rings, The Fellowship of the Ring\r\n",
+        "The Lord of the Rings, The Two Towers\r\n",
+        "The Lion, the Witch and the Wardrobe\r\n",
+        "Alice's Adventures in Wonderland\r\n",
+        "Howl's Moving Castle\r\n",
+        "Coraline\r\n",
+        "City of Ghosts\r\n"};
+    for(int i=0;i<100;i++)
+    {
+        char text_wr[128+10];
+        // textTest_file
+        sprintf(text_wr,"%d : %s",i,books[rand() % 6]);
+        my_file_open(&lfs, &file, "textTest_file2", LFS_O_RDWR | LFS_O_CREAT | LFS_O_APPEND);
+        lfs_file_write(&lfs, &file, text_wr, strlen(text_wr));
+        lfs_file_close(&lfs, &file); // important
+    }
+    // block
+    // open file
+    my_file_open(&lfs, &file, "textTest_file2", LFS_O_RDWR | LFS_O_CREAT);
+    // read the file in chunks of 128, as the file will be vary big to read at once
+    printf("----data in file----");
+    for(int i=0;i<100;i++)
+    {
+        int r=0;
+        char text_rd[128+10]={0};
+        // open and read the file
+        r = lfs_file_read(&lfs, &file, &text_rd, 128);
+        if(r>0)
+        {
+            printf("%s",text_rd);
+        }
+        else
+        {
+            printf("error, or file end");
+            break;
+        }
+    }
+    lfs_file_close(&lfs, &file);
     return 0;
 }
 // simple memory modeled using ram
