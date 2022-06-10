@@ -11,10 +11,21 @@ uint8_t eeprom[10*1024]; // 10kb
 void readData(uint32_t addr, uint8_t *buffer, uint32_t size);
 void writeData(uint32_t addr, uint8_t *buffer, uint32_t size);
 void memDump();
+// when using static mode
+int my_file_open(lfs_t *lfs, lfs_file_t *file,const char *path,int flags)
+{
+    static uint8_t file_buffer[256];
+    static struct lfs_file_config uploadFileConfig;
+	int rValue;
+    uploadFileConfig.buffer = file_buffer;
+    rValue = lfs_file_opencfg(lfs, file, path, flags, &uploadFileConfig);
+	return rValue;
+}
 
 int main(void)
 {
     lfs_t lfs;
+    lfs_file_t file;
     // global
 	static uint8_t lfs_readBuff[256];
 	static uint8_t lfs_writeBuff[256];
@@ -62,9 +73,22 @@ int main(void)
 		}
 	}
     //memDump();
+    // run a simple test
+    // int write test
+    for(int i=0;i<10;i++)
+    {
+        uint32_t test = 0;
+        my_file_open(&lfs, &file, "intTest_file", LFS_O_RDWR | LFS_O_CREAT);
+        lfs_file_read(&lfs, &file, &test, sizeof(test));
+        printf("test_count:%d\r\n",test);
+        test += 1;
+        lfs_file_rewind(&lfs, &file);
+        lfs_file_write(&lfs, &file, &test, sizeof(test));
+        // remember the storage is not updated until the file is closed successfully
+        lfs_file_close(&lfs, &file);
+    }
     return 0;
 }
-
 // simple memory modeled using ram
 void memDump()
 {
